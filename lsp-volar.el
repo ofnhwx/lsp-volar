@@ -35,45 +35,58 @@
                 '(:system "volar-server")
                 '(:npm :package "@volar/server" :path "volar-server"))
 
-(defun lsp-volar--make-init-options ()
-  "Init options for Volar."
-  (ht ("typescript" (ht ("serverPath" (expand-file-name "node_modules/typescript/lib/tsserverlibrary.js" (lsp-workspace-root)))))
-      ("languageFeatures" (ht ("callHierarchy" t)
-                              ("codeAction" t)
-                              ("codeLens" t)
-                              ("completion" (ht ("defaultTagNameCase" "both")
-                                                ("defaultAttrNameCase" "kebabCase")))
-                              ("definition" t)
-                              ("diagnostics" t)
-                              ("documentHighlight" t)
-                              ("documentLink" t)
-                              ("hover" t)
-                              ("references" t)
-                              ("rename" t)
-                              ("renameFileRefactoring" t)
-                              ("schemaRequestService" t)
-                              ("semanticTokens" t)
-                              ("signatureHelp" t)
-                              ("typeDefinition" t)))
-      ("documentFeatures" (ht ("documentColor" t)
-                              ("selectionRange" t)
-                              ("foldingRange" t)
-                              ("linkedEditingRange" t)
-                              ("documentSymbol" t)
-                              ("documentFormatting" (ht ("defaultPrintWidth" 100)))))))
+(lsp-register-custom-settings
+ '(("volar.typescript.serverPath" (lambda ()
+                              (expand-file-name "node_modules/typescript/lib/tsserverlibrary.js"
+                                                (lsp-workspace-root))))
+   ("volar.languageFeatures.callHierarchy" t t)
+   ("volar.languageFeatures.codeAction" t t)
+   ("volar.languageFeatures.codeLens" t t)
+   ("volar.languageFeatures.completion.getDocumentNameCasesRequest" nil t)
+   ("volar.languageFeatures.completion.getDocumentSelectionRequest" nil t)
+   ("volar.languageFeatures.completions.defaultAttrNameCase" "kebabCase")
+   ("volar.languageFeatures.completions.defaultTagNameCase" "both")
+   ("volar.languageFeatures.definition" t t)
+   ("volar.languageFeatures.diagnostics" t t)
+   ("volar.languageFeatures.documentHighlight" t t)
+   ("volar.languageFeatures.documentLink" t t)
+   ("volar.languageFeatures.hover" t t)
+   ("volar.languageFeatures.references" t t)
+   ("volar.languageFeatures.rename" t t)
+   ("volar.languageFeatures.renameFileRefactoring" t t)
+   ("volar.languageFeatures.schemaRequestService" t t)
+   ("volar.languageFeatures.semanticTokens" t t)
+   ("volar.languageFeatures.signatureHelp" t t)
+   ("volar.languageFeatures.typeDefinition" t t)
+   ("volar.languageFeatures.workspaceSymbol" t t)
+   ("volar.documentFeatures.documentColor" t t)
+   ("volar.documentFeatures.selectionRange" t t)
+   ("volar.documentFeatures.foldingRange" t t)
+   ("volar.documentFeatures.linkedEditingRange" t t)
+   ("volar.documentFeatures.documentSymbol" t t)
+   ("volar.documentFeatures.documentFormatting.defaultPrintWidth" 100)
+   ("volar.documentFeatures.documentFormatting.getDocumentPrintWidthRequest" nil t)
+   ))
+
+(defun volar-options ()
+  (ht-get (lsp-configuration-section "volar") "volar"))
+
+(defun volar-new-connection ()
+  (cons (lsp-package-path 'volar-server)
+        '("--stdio")))
+
+(defun volar-download-server-fn (_client callback error-callback _update?)
+  (lsp-package-ensure 'volar-server
+                      callback error-callback))
 
 (lsp-register-client
  (make-lsp-client
-  :new-connection (lsp-stdio-connection
-                   (lambda ()
-                     (cons (lsp-package-path 'volar-server)
-                           '("--stdio"))))
+  :new-connection (lsp-stdio-connection 'volar-new-connection)
   :major-modes '(vue-mode)
-  :initialization-options 'lsp-volar--make-init-options
   :server-id 'volar
-  :download-server-fn (lambda (_client callback error-callback _update?)
-                        (lsp-package-ensure 'volar-server
-                                            callback error-callback))))
+  :multi-root t
+  :initialization-options 'volar-options
+  :download-server-fn 'volar-download-server-fn))
 
 (provide 'lsp-volar)
 ;;; lsp-volar.el ends here
