@@ -39,37 +39,46 @@
  '(("volar.typescript.serverPath" (lambda ()
                               (expand-file-name "node_modules/typescript/lib/tsserverlibrary.js"
                                                 (lsp-workspace-root))))
-   ("volar.languageFeatures.callHierarchy" t t)
-   ("volar.languageFeatures.codeAction" t t)
-   ("volar.languageFeatures.codeLens" t t)
-   ("volar.languageFeatures.completion.getDocumentNameCasesRequest" nil t)
-   ("volar.languageFeatures.completion.getDocumentSelectionRequest" nil t)
-   ("volar.languageFeatures.completions.defaultAttrNameCase" "kebabCase")
-   ("volar.languageFeatures.completions.defaultTagNameCase" "both")
-   ("volar.languageFeatures.definition" t t)
-   ("volar.languageFeatures.diagnostics" t t)
-   ("volar.languageFeatures.documentHighlight" t t)
-   ("volar.languageFeatures.documentLink" t t)
-   ("volar.languageFeatures.hover" t t)
-   ("volar.languageFeatures.references" t t)
-   ("volar.languageFeatures.rename" t t)
-   ("volar.languageFeatures.renameFileRefactoring" t t)
-   ("volar.languageFeatures.schemaRequestService" t t)
-   ("volar.languageFeatures.semanticTokens" t t)
-   ("volar.languageFeatures.signatureHelp" t t)
-   ("volar.languageFeatures.typeDefinition" t t)
-   ("volar.languageFeatures.workspaceSymbol" t t)
-   ("volar.documentFeatures.documentColor" t t)
-   ("volar.documentFeatures.selectionRange" t t)
-   ("volar.documentFeatures.foldingRange" t t)
-   ("volar.documentFeatures.linkedEditingRange" t t)
-   ("volar.documentFeatures.documentSymbol" t t)
-   ("volar.documentFeatures.documentFormatting.defaultPrintWidth" 100)
-   ("volar.documentFeatures.documentFormatting.getDocumentPrintWidthRequest" nil t)
+   ("volar-api.languageFeatures.callHierarchy" t t)
+   ("volar-api.languageFeatures.codeAction" t t)
+   ("volar-api.languageFeatures.completion.getDocumentNameCasesRequest" nil t)
+   ("volar-api.languageFeatures.completion.getDocumentSelectionRequest" nil t)
+   ("volar-api.languageFeatures.completions.defaultAttrNameCase" "kebabCase")
+   ("volar-api.languageFeatures.completions.defaultTagNameCase" "both")
+   ("volar-api.languageFeatures.definition" t t)
+   ("volar-api.languageFeatures.hover" t t)
+   ("volar-api.languageFeatures.references" t t)
+   ("volar-api.languageFeatures.rename" t t)
+   ("volar-api.languageFeatures.renameFileRefactoring" t t)
+   ("volar-api.languageFeatures.schemaRequestService" t t)
+   ("volar-api.languageFeatures.signatureHelp" t t)
+   ("volar-api.languageFeatures.typeDefinition" t t)
+   ("volar-api.languageFeatures.workspaceSymbol" t t)
+   ("volar-doc.languageFeatures.codeLens" t t)
+   ("volar-doc.languageFeatures.diagnostics" t t)
+   ("volar-doc.languageFeatures.documentHighlight" t t)
+   ("volar-doc.languageFeatures.documentLink" t t)
+   ("volar-doc.languageFeatures.semanticTokens" t t)
+   ("volar-html.documentFeatures.documentColor" t t)
+   ("volar-html.documentFeatures.selectionRange" t t)
+   ("volar-html.documentFeatures.foldingRange" t t)
+   ("volar-html.documentFeatures.linkedEditingRange" t t)
+   ("volar-html.documentFeatures.documentSymbol" t t)
+   ("volar-html.documentFeatures.documentFormatting.defaultPrintWidth" 100)
+   ("volar-html.documentFeatures.documentFormatting.getDocumentPrintWidthRequest" nil t)
    ))
 
-(defun volar-options ()
-  (ht-get (lsp-configuration-section "volar") "volar"))
+(defun volar-api-options ()
+  (ht-merge (ht-get (lsp-configuration-section "volar") "volar")
+            (ht-get (lsp-configuration-section "volar-api") "volar-api")))
+
+(defun volar-doc-options ()
+  (ht-merge (ht-get (lsp-configuration-section "volar") "volar")
+            (ht-get (lsp-configuration-section "volar-doc") "volar-doc")))
+
+(defun volar-html-options ()
+  (ht-merge (ht-get (lsp-configuration-section "volar") "volar")
+            (ht-get (lsp-configuration-section "volar-html") "volar-html")))
 
 (defun volar-new-connection ()
   (cons (lsp-package-path 'volar-server)
@@ -83,9 +92,29 @@
  (make-lsp-client
   :new-connection (lsp-stdio-connection 'volar-new-connection)
   :major-modes '(vue-mode)
-  :server-id 'volar
+  :server-id 'volar-api
   :multi-root t
-  :initialization-options 'volar-options
+  :initialization-options 'volar-api-options
+  :download-server-fn 'volar-download-server-fn))
+
+(lsp-register-client
+ (make-lsp-client
+  :new-connection (lsp-stdio-connection 'volar-new-connection)
+  :major-modes '(vue-mode)
+  :server-id 'volar-doc
+  :multi-root t
+  :add-on? t
+  :initialization-options 'volar-doc-options
+  :download-server-fn 'volar-download-server-fn))
+
+(lsp-register-client
+ (make-lsp-client
+  :new-connection (lsp-stdio-connection 'volar-new-connection)
+  :major-modes '(vue-mode)
+  :server-id 'volar-html
+  :multi-root t
+  :add-on? t
+  :initialization-options 'volar-html-options
   :download-server-fn 'volar-download-server-fn))
 
 (provide 'lsp-volar)
